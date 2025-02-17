@@ -73,7 +73,8 @@ export default async function mergeConfig (options, context, gitRawCommitsOpts, 
     ...gitRawExecOpts || {}
   }
 
-  const rtag = options && options.tagPrefix ? new RegExp(`tag:\\s*[=]?${options.tagPrefix}(.+?)[,)]`, 'gi') : /tag:\s*[v=]?(.+?)[,)]/gi
+  const ptag = options && options.tagPrefix ? options.tagPrefix : "v"
+  const rtag = new RegExp(`tag:\\s*[=]?${ptag}(.+?)[,)]`, 'gi')
 
   options = {
     append: false,
@@ -231,7 +232,7 @@ export default async function mergeConfig (options, context, gitRawCommitsOpts, 
     fromTag = semverTags[options.releaseCount - 1]
     const lastTag = semverTags[0]
 
-    if (lastTag === context.version || lastTag === 'v' + context.version) {
+    if (lastTag === context.version || lastTag === ptag + context.version) {
       if (options.outputUnreleased) {
         context.version = 'Unreleased'
       } else {
@@ -311,9 +312,9 @@ export default async function mergeConfig (options, context, gitRawCommitsOpts, 
       const lastCommitHash = lastCommit ? lastCommit.hash : null
 
       if ((!context.currentTag || !context.previousTag) && keyCommit) {
-        const match = /tag:\s*(.+?)[,)]/gi.exec(keyCommit.gitTags)
+        const match = rtag.exec(keyCommit.gitTags)
         const currentTag = context.currentTag
-        context.currentTag = currentTag || match ? match[1] : null
+        context.currentTag = ptag + match[1]
         const index = semverTags.indexOf(context.currentTag)
 
         // if `keyCommit.gitTags` is not a semver
